@@ -1,0 +1,27 @@
+{
+  "name": "unified-websocket-gateway",
+  "version": "1.0.0",
+  "description": "Unified WebSocket Gateway for AI Engineering Coordination Platform",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "websocket",
+    "gateway",
+    "event-routing",
+    "real-time"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "socket.io": "^4.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0"
+  }
+}

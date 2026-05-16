@@ -1,7 +1,8 @@
 /**
  * Backend Intelligence Engine - Main Entry Point
- * 
+ *
  * Starts the Fastify server and initializes the Intelligence Engine
+ * Connects to the unified WebSocket gateway for real-time coordination
  */
 
 import Fastify from 'fastify';
@@ -11,6 +12,7 @@ import { IntelligenceEngine } from './engine/intelligence-engine';
 import { registerAnalysisRoutes } from './routes/analysis-routes';
 import { EngineConfig } from './types';
 import { logger } from './utils/logger';
+import { GatewayClient } from './gateway/gateway-client';
 
 // Load environment variables
 dotenv.config();
@@ -31,6 +33,7 @@ const config: EngineConfig = {
 };
 
 const PORT = parseInt(process.env.PORT || '3000');
+const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:4000';
 
 /**
  * Start the server
@@ -49,6 +52,47 @@ async function start() {
     logger.info('Initializing Intelligence Engine...');
     const engine = new IntelligenceEngine(config);
     await engine.initialize();
+
+    // Connect to unified gateway
+    logger.info('Connecting to unified gateway...');
+    const gatewayClient = new GatewayClient(GATEWAY_URL);
+    await gatewayClient.connect();
+
+    // Forward backend engine events to gateway
+    engine.onEvent('breaking-api-change', (event: any) => {
+      gatewayClient.sendEvent(event);
+    });
+    engine.onEvent('dependency-risk', (event: any) => {
+      gatewayClient.sendEvent(event);
+    });
+    engine.onEvent('affected-modules', (event: any) => {
+      gatewayClient.sendEvent(event);
+    });
+    engine.onEvent('contract-violation', (event: any) => {
+      gatewayClient.sendEvent(event);
+    });
+
+    // Handle incoming events from gateway (VS Code extension)
+    gatewayClient.on('file_changed', async (event: any) => {
+      logger.info('File changed event received from gateway', event.payload);
+      
+      // Trigger analysis
+      if (event.payload.filePath && event.payload.repo) {
+        try {
+          await engine.analyze({
+            repo: event.payload.repo,
+            branch: event.payload.branch,
+            changedFiles: [event.payload.filePath],
+          });
+        } catch (error) {
+          logger.error('Error analyzing file change', error);
+        }
+      }
+    });
+
+    gatewayClient.on('editor_context', (event: any) => {
+      logger.info('Editor context received from gateway', event.payload);
+    });
 
     // Register routes
     await registerAnalysisRoutes(fastify, engine);

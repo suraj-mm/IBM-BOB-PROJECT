@@ -24,7 +24,9 @@
     "neo4j-driver": "^5.17.0",
     "pg": "^8.11.3",
     "dotenv": "^16.4.1",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "socket.io": "^4.6.1",
+    "socket.io-client": "^4.6.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.16",
